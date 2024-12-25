@@ -166,10 +166,18 @@ export class Grid {
     let freezeTop = 0
     let rowMetaData = this.rowMetadata
     data.forEach((row, i) => {
-      let singleId = row['singleId'] //
       let nextI = i + 1
       let nextRow = data[nextI] //
       row['next'] = nextRow['singleId'] //
+      nextRow['prev'] = row['singleId'] //
+      let metaData = rowMetaData[row['singleId']] //
+      metaData['offset'] = offsetTop
+      let size = row['size'] //
+      if (isNaN(size)) {
+        metaData['size'] = 30 //
+        size = metaData['size'] //
+      }
+      offsetTop += size //
     })
     this.data = data
   }
@@ -206,8 +214,10 @@ export class Grid {
     const columnOffset = this.getColumnOffset(columnIndex)
     this.scrollTo({ scrollLeft: columnOffset, scrollTop: rowOffset })
   }
-  getRowHeight(rowIndex) {
-    console.log('getFn')
+  getRowHeight(rowIndex?: string) {
+    if (rowIndex == null) {
+      return this.rowHeight //
+    }
     let rowMetaData = this.rowMetadata
     let _data = rowMetaData[rowIndex]
     let size = _data?.size
@@ -217,19 +227,21 @@ export class Grid {
     return this.rowHeight //
   }
   initWatchEffect() {
-    console.log('run init')
-    // watchEffect(() => {
-    //   let scrollTop = grid.scrollTop
-    //   let containHeight = grid.height
-    //   if (containHeight == null) {
-    //     return
-    //   } //
-    //   let startIndex = 0
-    //   let endIndex = 0
-    //   let rowHeight = grid.getRowHeight() //
-    //   console.log(rowHeight)
-    //   //实现动态行高
-    // })
+    let grid = this
+    // console.log('run init')
+    //设置初始index和结束index
+    watchEffect(() => {
+      let scrollTop = grid.scrollTop
+      let containHeight = grid.height
+      if (containHeight == null) {
+        return
+      } //
+      let startIndex = 0
+      let endIndex = 0
+      let rowHeight = grid.getRowHeight() //
+      console.log(rowHeight)
+      //实现动态行高
+    })
   }
   // Reset grid after specific indices
   resetAfterIndices({ rowIndex, columnIndex }) {
