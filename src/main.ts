@@ -1,21 +1,21 @@
-import './assets/main.css'
-
 import { createApp } from 'vue'
-import { createPinia } from 'pinia'
-import router from './router'
-
 import App from './App.vue'
-import Axios from './apis/ajax'
-
-// import mountElementUI from './utils/elementUI'
-
-document.title = import.meta.env.VITE_APP_TITLE
-
+// 引入 vue-router
+import router from './router'
+// 引入 pinia
+// import { useUserStore } from './store'
+// import store from './store'
+import './assets/css/index.css'
+import 'animate.css'
+// 单独引入 ElMessage 和 ElMessageBox 的样式
+import 'element-plus/theme-chalk/el-message.css'
+import 'element-plus/theme-chalk/el-message-box.css'
+import VueKonva from 'vue-konva'
 const app = createApp(App)
-app.use(createPinia())
-app.provide('$http', Axios)
-app.use(router)
-
-// 全量引入Element UI
-// mountElementUI(app)
-app.mount('#app')
+// .use(store)
+////
+// 获取基础数据//
+// await useUserStore().getData()// 
+////// 
+app.use(router).use(VueKonva).mount('#app')
+ //
