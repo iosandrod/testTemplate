@@ -1,6 +1,9 @@
 <template>
-  <router-view></router-view>
+    <div>
+        grid
+    </div>
 </template>
+
 <script setup lang="ts"></script>
 
-<style></style>
+<style scoped></style>

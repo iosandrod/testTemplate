@@ -1,69 +1,63 @@
-/// <reference types="vitest" />
-
-import path from 'path'
-import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
+import type { ConfigEnv } from 'vite'
+import { resolve } from 'path'
 import vue from '@vitejs/plugin-vue'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+// import { viteMockServe } from 'vite-plugin-mock'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
-import ElementPlus from 'unplugin-element-plus/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import vueJsx from '@vitejs/plugin-vue-jsx'
-import { configDefaults } from 'vitest/config'
 
-// https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(),
-    vueJsx(),
-    // Element Plus 的UI按需引入配置
-    AutoImport({
-      resolvers: [ElementPlusResolver()]
-    }),
-    Components({
-      resolvers: [ElementPlusResolver()]
-    }),
-    ElementPlus({
-      defaultLocale: 'zh-cn'
-    })
-  ],
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    exclude: [...configDefaults.exclude, 'e2e/*'],
-    root: fileURLToPath(new URL('./', import.meta.url))
-  },
-  optimizeDeps: {
-    include: ['vue', 'vue-router', 'pinia', 'axios']
-  },
-  build: {
-    sourcemap: true
-  },
-  server: {
-    port: 8080,
-    host: '0.0.0.0',
-    proxy: {
-      '/api/': {
-        target:
-          'https://service-rbji0bev-1256505457.cd.apigw.tencentcs.com/release',
-        changeOrigin: true,
-        rewrite: p => p.replace(/^\/api/, '')
+export default defineConfig(({ mode }: ConfigEnv) => {
+  const env = loadEnv(mode, process.cwd())
+  return {
+    resolve: {
+      alias: {
+        '/@': resolve(__dirname, 'src'),
+        '/cpns': resolve(__dirname, 'src/components'),
       },
-      '/api-prod/': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        rewrite: p => p.replace(/^\/api-prod/, '')
+      extensions: ['.js', '.json', '.ts', '.vue'], // 使用路径别名时想要省略的后缀名，可以自己 增减
+    },
+    build: {
+      target: 'esnext',
+    },
+    server: {
+      proxy: {
+        // 使用 proxy 实例
+        '/api': {
+          target: env.VITE_APP_API_BASE_URL,
+          changeOrigin: true,
+          rewrite: path => path.replace(/^\/api/, ''),
+        },
       },
-      '/api-test/': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        rewrite: p => p.replace(/^\/api-test/, '')
-      }
-    }
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+    },
+    plugins: [
+      vue({
+        // 默认开启响应性语法糖
+        reactivityTransform: true,
+      }),
+      AutoImport({
+        resolvers: [ElementPlusResolver()],
+        // 自定引入 Vue VueRouter API,如果还需要其他的可以自行引入
+        imports: ['vue', 'vue-router'],
+        // 调整自动引入的文件位置
+        dts: 'src/type/auto-import.d.ts',
+        // 解决自动引入eslint报错问题 需要在eslintrc的extend选项中引入
+        eslintrc: {
+          enabled: true,
+          // 配置文件的位置
+          filepath: './.eslintrc-auto-import.json',
+          globalsPropValue: true,
+        },
+      }),
+      Components({
+        resolvers: [ElementPlusResolver()],
+        dts: 'src/type/components.d.ts',
+      }),
+      // 配置mock
+      // viteMockServe({
+      //   mockPath: '/mock',
+      //   localEnabled: true,
+      // }),
+    ],
   }
 })
