@@ -1,25 +1,15 @@
 <template>
-  <!-- <v-stage
-    :config="{
-      width: 500,
-      height: 500,
-    }"
-  >
-    <v-layer>
-     
-    </v-layer>
-  </v-stage> -->
-  <div>
-    {{ columnWidth }}
-  </div>
+  <v-stage :config="stateConfig">
+    <v-layer></v-layer>
+  </v-stage>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, isReactive } from 'vue'
 import { PropBridge as _props, createBridge } from './gClass/PropBridge'
 import { Grid } from './gClass/Grid'
-import { generateColumns, getCellPosition } from './gClass/helper.ts'
-import { columns, data } from './gClass/static.ts'
+import { generateColumns, getCellPosition } from './gClass/helper'
+import { columns, data } from './gClass/static'
 const props = defineProps()
 let _props1 = reactive({
   columnWidth: 100,
@@ -76,7 +66,15 @@ const grid = createBridge<Grid>(Grid, _props1) //
 //   } //
 // })//
 const cells = computed(() => {})
-let columnWidth = computed(() => grid.columnWidth)
+let columnWidth = computed(() => grid.columnWidth) //
+const stateConfig = computed(() => {
+  let height = grid.height
+  let width = grid.width
+  return {
+    height,
+    width,
+  }
+})
 setInterval(() => {
   grid.columnWidth = grid.columnWidth + 10
 }, 100)

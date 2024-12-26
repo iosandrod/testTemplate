@@ -65,6 +65,8 @@ export class Grid {
   rowHeight: number = 30
   scrollLeft: number = 0
   scrollTop: number = 0 //
+  isScrollTop: boolean = false //正在向上
+  isScrollLeft: boolean = false //正在向左
   scrollbarSize: number = 13
   estimatedColumnWidth?: number
   estimatedRowHeight?: number
@@ -238,8 +240,6 @@ export class Grid {
       } //
       let startIndex = 0
       let endIndex = 0
-      let rowHeight = grid.getRowHeight() //
-      console.log(rowHeight)
       //实现动态行高
     })
   }
