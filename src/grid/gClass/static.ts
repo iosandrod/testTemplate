@@ -5001,4 +5001,4 @@ export const columns = [
   },
 ]
  
-export const data=Array(10000).fill(null).map((_,i)=>{return {index:i}})
+export const data=Array(1000).fill(null).map((_,i)=>{return {index:i}})

@@ -44,3 +44,10 @@ export const generateColumns = (num = 1000) => {
 export const uniqueId = () => {
   return _uniqueId() //
 }
+
+export const calStartIndex = (data, mesIndex, metaMeta) => {
+  let i = mesIndex
+  for (; i < data.length; i++) {
+  }
+  return i
+}

@@ -9,10 +9,9 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "noImplicitAny": false,
-    "allowImportingTsExtensions": false,
+    "noImplicitAny": false, 
     "lib": [ 
-      "esnext",
+      "esnext", 
       "dom"
     ],
     "types": [
