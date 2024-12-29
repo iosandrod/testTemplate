@@ -1,22 +1,62 @@
 <template>
-  <v-stage :config="stateConfig">
-    <v-layer></v-layer>
-  </v-stage>
+  <div class="w-full h-full bg-red">
+    <v-stage :config="stateConfig">
+      <v-layer></v-layer>
+    </v-stage>
+    <div id="hScrollBar" class=""></div>
+    <div id="vScrollBar" class=""></div>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, isReactive } from 'vue'
-import { PropBridge as _props, createBridge } from './gClass/PropBridge'
-import { Grid } from './gClass/Grid'
-import { generateColumns, getCellPosition } from './gClass/helper'
-import { columns, data } from './gClass/static'
-const props = defineProps()
+//水平与垂直
+import { ref, computed, isReactive } from "vue";
+import { PropBridge as _props, createBridge } from "./gClass/PropBridge";
+import { Grid } from "./gClass/Grid";
+import { generateColumns, getCellPosition } from "./gClass/helper";
+import { columns, data } from "./gClass/static";
+const props = defineProps();
 let _props1 = reactive({
   columnWidth: 100,
   data: data,
   columns: columns,
-})
-const grid = createBridge<Grid>(Grid, _props1) //
+});
+const grid = createBridge<Grid>(Grid, _props1); //
+//计算总高度
+watchEffect(() => {
+  const _data = grid.data;
+  let rowMetaData = grid.rowMetadata;
+  let uniIdArr = _data
+    .map((item) => item.uniqueId)
+    .map((item) => {
+      let config = rowMetaData[item]; //
+      let size = config?.size;
+      if (size == null) {
+        size = grid.rowHeight; //每一行的高度
+      }
+      return size;
+    }); //
+});
+const hScrollBarStyle = computed(() => {
+  let renderConfig = grid.renderConfig;
+  let totalWidth = renderConfig.totalWidth;
+  return {
+    width: `${totalWidth}px`,
+    height: `${1}px`,
+  };
+});
+//计算总体高度
+watchEffect(() => {});
+//垂直水平
+const vScrollBarStyle = computed(() => {
+  let renderConfig = grid.renderConfig;
+  let totalHeight = renderConfig.totalHeight;
+  return {
+    height: `${totalHeight}px`,
+    width: `${1}px`,
+  };
+});
+
 // console.log(grid.columnMetadata, 'columnMetadata')
 // console.log(grid.rowMetadata, 'rowMetadata') //
 // console.log(isReactive(grid))
@@ -65,19 +105,19 @@ const grid = createBridge<Grid>(Grid, _props1) //
 //     } //
 //   } //
 // })//
-const cells = computed(() => {})
-let columnWidth = computed(() => grid.columnWidth) //
+const cells = computed(() => {});
+let columnWidth = computed(() => grid.columnWidth); //
 const stateConfig = computed(() => {
-  let height = grid.height
-  let width = grid.width
+  let height = grid.height;
+  let width = grid.width;
   return {
     height,
     width,
-  }
-})
+  };
+});
 setInterval(() => {
-  grid.columnWidth = grid.columnWidth + 10
-}, 100)
+  grid.columnWidth = grid.columnWidth + 10;
+}, 100);
 </script>
 
 <style scoped></style>

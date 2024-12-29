@@ -82,7 +82,7 @@ export class Grid {
   fillSelection?: SelectionArea | null
   mergedCells?: AreaProps[]
   frozenRows?: number
-  rowMetadata = {}
+  rowMetadata: { [key: string]: { isFreeze: boolean, size: number, offset: number } } = {}
   columnMetadata = {} //
   frozenColumns?: number
   snap?: boolean
@@ -117,9 +117,14 @@ export class Grid {
   isDraggingSelection?: boolean
   columns: Column[] = [] //
   cache: any = {} //
+  renderConfig: {
+    totalHeight?: number
+    totalWidth?: number
+  } = {
+    }
   data: any[] = []
-  constructor() {}
-  onScrollChange(scrollChangConfig: any) {}
+  constructor() { }
+  onScrollChange(scrollChangConfig: any) { }
   scrollTo({ scrollLeft, scrollTop }) {
     // if (this.container) {
     //   this.container.scrollLeft = scrollLeft;
@@ -162,7 +167,7 @@ export class Grid {
           size: 0,
           isFreeze: false, //是否冻结
         } //
-      }
+      }//
     })
     let offsetTop = 0
     let freezeTop = 0
@@ -170,8 +175,10 @@ export class Grid {
     data.forEach((row, i) => {
       let nextI = i + 1
       let nextRow = data[nextI] //
-      row['next'] = nextRow['singleId'] //
-      nextRow['prev'] = row['singleId'] //
+      if (nextRow != null) {
+        row['next'] = nextRow['singleId'] //
+        nextRow['prev'] = row['singleId'] //
+      }
       let metaData = rowMetaData[row['singleId']] //
       metaData['offset'] = offsetTop
       let size = row['size'] //
@@ -183,8 +190,8 @@ export class Grid {
     })
     this.data = data
   }
-  addRow(row) {}
-  removeRow(row) {}
+  addRow(row) { }
+  removeRow(row) { }
   addColumn(col) {
     let field = col.field
     let columns = this.columns
@@ -198,7 +205,7 @@ export class Grid {
     let columnMetadata = this.columnMetadata
     columnMetadata[_col.singleId] = { offset: 0, size: 0 } //
   }
-  removeColumn(col) {}
+  removeColumn(col) { }
   setWidth(width: number) {
     this.width = width
   }
@@ -354,8 +361,8 @@ export class Grid {
     //   scrollTop: this.props.rowCount * (this.props.rowHeight?.(0) || 0),
     // });
   }
-  onRowHeightChange(config) {}
-  onColumnWidthChange(config) {}
+  onRowHeightChange(config) { }
+  onColumnWidthChange(config) { }
   // Get grid dimensions
   getDimensions() {
     // return {
@@ -363,7 +370,8 @@ export class Grid {
     //   totalHeight: this.props.rowCount * (this.props.rowHeight?.(0) || 0),
     // };
   }
-
+  setTotalHeight(height) {
+  }
   // Get row offset
   getRowOffset(rowIndex) {
     // let offset = 0;
