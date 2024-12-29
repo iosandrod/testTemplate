@@ -1,3 +1,4 @@
+import { data } from './static'
 import { Column } from './Column'
 import { createBridge } from './PropBridge'
 import { uniqueId } from './helper'
@@ -82,8 +83,18 @@ export class Grid {
   fillSelection?: SelectionArea | null
   mergedCells?: AreaProps[]
   frozenRows?: number
-  rowMetadata: { [key: string]: { isFreeze: boolean, size: number, offset: number } } = {}
-  columnMetadata = {} //
+  rowMetadata: {
+    [key: string]: {
+      offset: number
+      size: number
+      isFreeze: boolean
+      pre?: string
+      next?: string
+    }
+  } = {}
+  columnMetadata: {
+    [key: string]: { offset: number; size: number; pre?: string; next?: string }
+  } = {} //
   frozenColumns?: number
   snap?: boolean
   showFrozenShadow?: boolean
@@ -95,6 +106,18 @@ export class Grid {
   // overlayRenderer?: (props: RendererProps) => React.ReactNode;
   // selectionRenderer?: (props: SelectionProps) => React.ReactNode;
   fillHandleProps?: Record<string, (e: any) => void>
+  //虚拟滚动
+  scrollConfig = {
+    startIndex: 0,
+    endIndex: 0,
+    colStartIndex: 0,
+    colEndIndex: 0,
+    vScroll: 0,
+    hScroll: 0,
+  }
+  rawConfig = {
+    startIndex: 0,
+  }
   onViewChange?: (view: ViewPortProps) => void
   onBeforeRenderRow?: (rowIndex: number) => void
   // children?: (props: ScrollCoords) => React.ReactNode;
@@ -130,6 +153,9 @@ export class Grid {
     //   this.container.scrollLeft = scrollLeft;
     //   this.container.scrollTop = scrollTop;
     // }
+  } //
+  getColumnWidth() {
+    return this.columnWidth + 1
   }
   setColumnWidth(width, field) {
     if (isNaN(Number(width))) {
@@ -147,15 +173,12 @@ export class Grid {
     columns.forEach((col) => {
       this.addColumn(col)
     })
-    // this.columns.forEach((col, i) => {
-    //   col.index = i //
-    // })
   }
   setData(_data) {
     if (!Array.isArray(_data)) {
       return
     }
-    let data = [..._data] //
+    let data = _data
     //
     data.forEach((row, i) => {
       let rowIndex = row['uniqueId']
@@ -167,7 +190,7 @@ export class Grid {
           size: 0,
           isFreeze: false, //是否冻结
         } //
-      }//
+      }
     })
     let offsetTop = 0
     let freezeTop = 0
@@ -201,9 +224,24 @@ export class Grid {
     }
     let _col = createBridge<Column>(Column, col) //
     _col.singleId = uniqueId()
+    let lastCol = columns.slice(-1)[0]
+    let lastMeta = this.columnMetadata[lastCol?.singleId]
+    if (lastCol != null) {
+      let lastMeta = this.columnMetadata[lastCol.singleId]
+      lastMeta['next'] = _col.singleId //
+    }
     this.columns.push(_col) //
     let columnMetadata = this.columnMetadata
-    columnMetadata[_col.singleId] = { offset: 0, size: 0 } //
+    let width = _col.width
+    let offset = 0
+    if (lastCol != null) {
+      offset = lastMeta['offset'] + lastMeta['size'] //
+    }
+    columnMetadata[_col.singleId] = {
+      offset: offset,
+      size: width,
+      pre: lastCol?.singleId,
+    } //
   }
   removeColumn(col) { }
   setWidth(width: number) {
@@ -239,16 +277,6 @@ export class Grid {
     let grid = this
     // console.log('run init')
     //设置初始index和结束index
-    watchEffect(() => {
-      let scrollTop = grid.scrollTop
-      let containHeight = grid.height
-      if (containHeight == null) {
-        return
-      } //
-      let startIndex = 0
-      let endIndex = 0
-      //实现动态行高
-    })
   }
   // Reset grid after specific indices
   resetAfterIndices({ rowIndex, columnIndex }) {
@@ -388,6 +416,47 @@ export class Grid {
     // }
     // return offset;
   }
+  onVScroll(config: number) {
+    if (isNaN(Number(config))) return
+    this.scrollTop = config //
+  } //
+  onHScroll(config: number) {
+    if (isNaN(Number(config))) return
+    this.scrollLeft = config
+  }
+  getRawConfig() {
+    let rawConfig = toRaw(this.rawConfig)
+    return rawConfig
+  }
+  calStartRowIndex() {
+    // let scrollTop = this.scrollTop //
+    // nextTick(() => {
+    //   let _config = this.rawConfig
+    //   if (scrollTop == 0) {
+    //     this.scrollConfig.startIndex = 0 //
+    //     _config.startIndex = 0 //
+    //     return
+    //   }
+    //   let data = this.data
+    //   let rowIndex = _config.startIndex
+    //   let _row = data[rowIndex]
+    //   let uid = _row['singleId']
+    //   let metaData = this.rowMetadata[uid]
+    //   if (scrollTop > metaData.offset + metaData.size) {
+    //     _config.startIndex = rowIndex + 1
+    //   } else if (scrollTop < metaData.offset) {
+    //     if (rowIndex == 0) {
+    //     } else {
+    //       _config.startIndex = rowIndex - 1 //
+    //     }
+    //   }
+    //   this.scrollConfig.startIndex = _config.startIndex //
+    // }) //
+    //设置游标
+  }
+  calEndRowIndex() {}
+  calStartColumnIndex() {}
+  calEndColumnIndex() {} //
 }
 
 // 示例用法：

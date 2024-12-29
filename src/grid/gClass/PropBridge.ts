@@ -89,7 +89,7 @@ export const createBridge = <T>(_class, props): T => {
       }
       return true //
     },
-  })
+  }) //中间代理商
   return _bridge as T
   //_bridge as T //
 }

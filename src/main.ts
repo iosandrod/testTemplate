@@ -5,7 +5,7 @@ import router from './router'
 // 引入 pinia
 // import { useUserStore } from './store'
 // import store from './store'
-import './assets/css/index.css'
+// import './assets/css/index'
 import 'animate.css'
 // 单独引入 ElMessage 和 ElMessageBox 的样式
 import 'element-plus/theme-chalk/el-message.css'
