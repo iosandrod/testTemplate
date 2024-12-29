@@ -106,8 +106,12 @@ export class Grid {
   // overlayRenderer?: (props: RendererProps) => React.ReactNode;
   // selectionRenderer?: (props: SelectionProps) => React.ReactNode;
   fillHandleProps?: Record<string, (e: any) => void>
+  //虚拟滚动
   scrollConfig = {
     startIndex: 0,
+    endIndex: 0,
+    colStartIndex: 0,
+    colEndIndex: 0,
     vScroll: 0,
     hScroll: 0,
   }
@@ -144,6 +148,9 @@ export class Grid {
     //   this.container.scrollLeft = scrollLeft;
     //   this.container.scrollTop = scrollTop;
     // }
+  } //
+  getColumnWidth() {
+    return this.columnWidth + 1
   }
   setColumnWidth(width, field) {
     if (isNaN(Number(width))) {
@@ -404,37 +411,41 @@ export class Grid {
     // return offset;
   }
   onVScroll(config: number) {
+    if (isNaN(Number(config))) return
     this.scrollTop = config //
   } //
+  onHScroll(config: number) {
+    if (isNaN(Number(config))) return
+    this.scrollLeft = config
+  }
   getRawConfig() {
     let rawConfig = toRaw(this.rawConfig)
     return rawConfig
   }
   calStartRowIndex() {
-    let scrollTop = this.scrollTop //
-    // let _config = this.getRawConfig()
-    nextTick(() => {
-      let _config = this.rawConfig
-      if (scrollTop == 0) {
-        this.scrollConfig.startIndex = 0 //
-        _config.startIndex = 0 //
-        return
-      }
-      let data = this.data
-      let rowIndex = _config.startIndex
-      let _row = data[rowIndex]
-      let uid = _row['singleId']
-      let metaData = this.rowMetadata[uid]
-      if (scrollTop > metaData.offset + metaData.size) {
-        _config.startIndex = rowIndex + 1
-      } else if (scrollTop < metaData.offset) {
-        if (rowIndex == 0) {
-        } else {
-          _config.startIndex = rowIndex - 1 //
-        }
-      }
-      this.scrollConfig.startIndex = _config.startIndex //
-    }) //
+    // let scrollTop = this.scrollTop //
+    // nextTick(() => {
+    //   let _config = this.rawConfig
+    //   if (scrollTop == 0) {
+    //     this.scrollConfig.startIndex = 0 //
+    //     _config.startIndex = 0 //
+    //     return
+    //   }
+    //   let data = this.data
+    //   let rowIndex = _config.startIndex
+    //   let _row = data[rowIndex]
+    //   let uid = _row['singleId']
+    //   let metaData = this.rowMetadata[uid]
+    //   if (scrollTop > metaData.offset + metaData.size) {
+    //     _config.startIndex = rowIndex + 1
+    //   } else if (scrollTop < metaData.offset) {
+    //     if (rowIndex == 0) {
+    //     } else {
+    //       _config.startIndex = rowIndex - 1 //
+    //     }
+    //   }
+    //   this.scrollConfig.startIndex = _config.startIndex //
+    // }) //
     //设置游标
   }
   calEndRowIndex() {}

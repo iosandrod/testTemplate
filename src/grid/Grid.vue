@@ -10,7 +10,11 @@
     <v-stage :config="stateConfig">
       <v-layer>
         <v-group :config="group1Config">
-          <v-group :config="group2Config"></v-group>
+          <v-group :config="group2Config">
+            <template v-for="cell in cells" :key="cell.key">
+              <Cell v-bind="cell"></Cell>
+            </template>
+          </v-group>
         </v-group>
       </v-layer>
     </v-stage>
@@ -35,24 +39,31 @@
         left: '0px',
         top: `${grid.height}px`,
       }"
-      onscroll=""
+      @scroll="onHScroll"
       id="hScrollBar"
     >
       <div :style="hScrollBarStyle"></div>
     </div>
     <div style="margin-top: 50px;">
       {{ grid.scrollConfig.vScroll }}
+      {{ grid.columnWidth }}
       <input type="text" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, isReactive } from 'vue'
+import { ref, computed, isReactive, watch } from 'vue'
 import { PropBridge as _props, createBridge } from './gClass/PropBridge'
 import { Grid } from './gClass/Grid'
+import { getNextIndex, getPreIndex } from './gClass/helper'
 import { workerRun } from './gClass/utils'
-import { generateColumns, getCellPosition } from './gClass/helper'
+import Cell from './Cell.vue'
+import {
+  getCellPosition,
+  getRowEndIndex,
+  getColumnEndIndex,
+} from './gClass/helper'
 import { columns, data } from './gClass/static' //
 const props = defineProps()
 let _props1 = reactive({
@@ -67,24 +78,58 @@ let _props1 = reactive({
 // console.log(_data.length)
 const grid = createBridge<Grid>(Grid, _props1) //
 //设置开始的位置
-watchEffect(() => {
-  grid.calStartRowIndex() //
-  nextTick(() => {
-    console.log(grid.scrollConfig.startIndex) //
-  })
-})
-//设置测量位置
-watchEffect(() => {})
-//设置结束位置//
-watchEffect(() => {})
-//
-
-//虚拟化垂直位置
-
-//设置metaData
-
-const cells = computed(() => {})
-// let columnWidth = computed(() => grid.columnWidth) //
+watch(
+  () => {
+    return grid.scrollTop
+  },
+  (newValue, oldValue) => {
+    let _value = newValue
+    let scrollConfig = grid.scrollConfig
+    let startIndex = scrollConfig.startIndex
+    let data = grid.data
+    if (newValue > oldValue) {
+      //向下滚动
+      let rowMetadata = grid.rowMetadata
+      let nextOffset = getNextIndex(data, startIndex, rowMetadata, _value)
+      if (nextOffset != null) {
+        grid.scrollConfig.startIndex = nextOffset
+      }
+    } else {
+      //向上滚动
+      let rowMetadata = grid.rowMetadata
+      let preOffset = getPreIndex(data, startIndex, rowMetadata, _value)
+      if (preOffset != null) {
+        grid.scrollConfig.startIndex = preOffset
+      }
+    }
+  },
+)
+watch(
+  () => {
+    return grid.scrollLeft
+  },
+  (newValue, oldValue) => {
+    let _value = newValue
+    let scrollConfig = grid.scrollConfig
+    let startIndex = scrollConfig.colStartIndex
+    let columns = grid.columns
+    if (newValue > oldValue) {
+      //向右滚动
+      let columnMetadata = grid.columnMetadata
+      let nextOffset = getNextIndex(columns, startIndex, columnMetadata, _value)
+      if (nextOffset != null) {
+        grid.scrollConfig.colStartIndex = nextOffset //
+      } //
+    } else {
+      //向左滚动
+      let columnMetadata = grid.columnMetadata
+      let preOffset = getPreIndex(columns, startIndex, columnMetadata, _value)
+      if (preOffset != null) {
+        grid.scrollConfig.colStartIndex = preOffset
+      }
+    }
+  },
+)
 const stateConfig = computed(() => {
   let height = grid.height
   let width = grid.width
@@ -112,6 +157,36 @@ watchEffect(async () => {
   }, uidArr)) as number
   grid.scrollConfig.vScroll = totalHeight //
 })
+watch(
+  () => {
+    return grid.scrollConfig.startIndex
+  },
+  (newValue) => {
+    let data = grid.data
+    let rowMetadata = grid.rowMetadata
+    let height = grid.height
+    let nextIndex = getRowEndIndex(data, newValue, rowMetadata, height) //
+    grid.scrollConfig.endIndex = nextIndex
+  },
+  {
+    immediate: true,
+  },
+)
+watch(
+  () => {
+    return grid.scrollConfig.colStartIndex
+  },
+  (newValue) => {
+    let columns = grid.columns
+    let columnMetadata = grid.columnMetadata
+    let width = grid.width
+    let nextIndex = getColumnEndIndex(columns, newValue, columnMetadata, width) //
+    grid.scrollConfig.colEndIndex = nextIndex
+  },
+  {
+    immediate: true,
+  },
+)
 watchEffect(async () => {
   //列宽有关
   let columns = grid.columns
@@ -127,7 +202,7 @@ watchEffect(async () => {
     let total = config.reduce((pre, cur) => pre + cur, 0)
     return total
   }, uidArr)) as number
-  grid.scrollConfig.hScroll = totalWidth
+  grid.scrollConfig.hScroll = totalWidth //
 })
 //获取所有元数据
 const hScrollBarStyle = computed(() => {
@@ -152,9 +227,55 @@ function onVScroll(config: Event) {
   //@ts-ignore
   grid.onVScroll(scrollTop)
 }
-function onHScroll(config) {}
+function onHScroll(config) {
+  //@ts-ignore
+  let scrollLeft = config?.target?.scrollLeft
+  //@ts-ignore
+  grid.onHScroll(scrollLeft) //
+}
 let group1Config = computed(() => {})
-let group2Config = computed(() => {})
+let group2Config = computed(() => {
+  let scrollTop = grid.scrollTop
+  let scrollLeft = grid.scrollLeft
+  return {
+    offsetY: scrollTop,
+    offsetX: scrollLeft,
+  }
+})
+const cells = computed(() => {
+  let scrollConfig = grid.scrollConfig
+  let startIndex = scrollConfig.startIndex
+  let endIndex = scrollConfig.endIndex
+  let colStartIndex = scrollConfig.colStartIndex
+  let colEndIndex = scrollConfig.colEndIndex
+  let columns = grid.columns
+  let columnMetadata = grid.columnMetadata
+  let rowMetadata = grid.rowMetadata
+  let data = grid.data
+  let showData = data.slice(startIndex, endIndex)
+  let showColumns = columns.slice(colStartIndex, colEndIndex)
+  let cells: any[] = []
+  for (let i = 0; i < showData.length; i++) {
+    let row = showData[i]
+    for (let j = 0; j < showColumns.length; j++) {
+      let column = showColumns[j]
+      let rowId = row['singleId']
+      let columnId = column['singleId']
+      let rowData = rowMetadata[rowId]
+      let columnData = columnMetadata[columnId]
+      let cell = {
+        rowData,
+        columnData,
+        row: row,
+        column: column,
+        key: `${rowId}-${columnId}`,
+      }
+      cells.push(cell)
+    }
+  } //
+  return cells //
+})
+setInterval(() => {}, 1000)
 </script>
 
 <style scoped></style>

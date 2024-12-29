@@ -9,7 +9,7 @@ export class PropBridge<T = Grid> extends EventEmitter {
   props?: any //
   constructor(props, _class) {
     super() //
-    this.props = props // 
+    this.props = props //
     //@ts-ignore
     const _grid = reactive(new _class())
     if (_grid?.initWatchEffect != null) {
@@ -89,7 +89,7 @@ export const createBridge = <T>(_class, props): T => {
       }
       return true //
     },
-  })
+  }) //中间代理商
   return _bridge as T
   //_bridge as T //
 }
