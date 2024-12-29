@@ -131,8 +131,8 @@ watch(
   },
 )
 const stateConfig = computed(() => {
-  let height = grid.height;
-  let width = grid.width;
+  let height = grid.height
+  let width = grid.width
   return {
     height,
     width,
